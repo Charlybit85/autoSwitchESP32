@@ -1,33 +1,42 @@
-from flask import Flask, render_template, jsonify
-import requests
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-ESP32_IP = "http://Colocare el ip del esp32(pendiente)" 
-estado = {"switch": "apagado"}
+datos = {
+    "led_deseado": "off",
+    "led_reportado": None,
+}
 
-@app.route("/")
-def index():
-    return render_template("index.html", estado=estado["switch"])
+@app.route("/api/led", methods=["POST"])
+def cambiar_led():
+    cuerpo = request.get_json()
+    nuevo = cuerpo.get("estado") 
 
-@app.route("/encender", methods=["POST"])
-def encender():
-    try:
-        requests.get(f"{ESP32_IP}/on", timeout=3)
-        estado["switch"] = "encendido"
-        return jsonify(ok=True, estado=estado["switch"])
-    except requests.RequestException:
-        return jsonify(ok=False, error="No se pudo contactar al ESP32"), 502
+    if nuevo not in ("on", "off"):
+        return jsonify(error="estado debe ser 'on' u 'off'"), 400
 
-@app.route("/apagar", methods=["POST"])
-def apagar():
-    try:
-        requests.get(f"{ESP32_IP}/off", timeout=3)
-        estado["switch"] = "apagado"
-        return jsonify(ok=True, estado=estado["switch"])
-    except requests.RequestException:
-        return jsonify(ok=False, error="No se pudo contactar al ESP32"), 502
+    datos["led_deseado"] = nuevo
+    return jsonify(ok=True, led_deseado=nuevo)
+
+@app.route("/api/led", methods=["GET"])
+def consultar_led():
+    return jsonify(
+        led_deseado=datos["led_deseado"],
+        led_reportado=datos["led_reportado"],
+    )
+
+
+# Esto es del esp32
+@app.route("/api/esp32/config", methods=["GET"])
+def esp32_config():
+    return jsonify(led=datos["led_deseado"])
+
+@app.route("/api/esp32/estado", methods=["POST"])
+def esp32_estado():
+    cuerpo = request.get_json()
+    datos["led_reportado"] = cuerpo.get("led")
+    return jsonify(ok=True)
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=5001)
