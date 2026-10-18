@@ -3,9 +3,9 @@
 #include <ArduinoJson.h>
 
 
-const char* WIFI_SSID  = "Mendoza";
-const char* WIFI_PASS  = "96419045";
-const char* SERVER_URL = "http://192.168.1.107:5001";  
+const char* WIFI_SSID  = "TU_WIFI";
+const char* WIFI_PASS  = "TU_CONTRASENA";
+const char* SERVER_URL = "http://IP_DE_TU_COMPUTADORA:5000";
 
 const int PIN_LED = 13;  
 
