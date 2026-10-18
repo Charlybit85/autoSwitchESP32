@@ -1,22 +1,24 @@
-import os
-from flask import Flask, render_template, jsonify
-import requests
+from flask import Flask, jsonify, render_template, request
 
 app = Flask(__name__)
-ESP32_URL = os.getenv("ESP32_URL", "http://127.0.0.1:5001")
-TIMEOUT = 3  # Tiempo de espera para las solicitudes al ESP32 LO CAMBIE COMO VARIABLE DE ENTORNO PARA QUE SEA MAS FACIL DE CAMBIAR
+datos = {
+    "led_deseado": "off",
+    "led_reportado": None,
+}
 
-#ESP32_IP = "http://Colocare el ip del esp32(pendiente)" 
-#estado = {"switch": "apagado"}
 
-def pedir_al_esp32(ruta):
-    try:
-        respuesta = requests.get(f"{ESP32_URL}{ruta}", timeout=TIMEOUT)
-        respuesta.raise_for_status()  # Lanza un error si la respuesta no es 200
-        estadoReal=respuesta.json().get("estado", "desconocido")
-        return jsonify(ok=True, estado=estadoReal)
-    except requests.RequestException as e:
-        return jsonify(ok=False, estado="desconocido", error="error no se puede conectatr al ESP32"), 502
+def estado_actual():
+    estados = {"on": "encendido", "off": "apagado"}
+    return estados.get(datos["led_reportado"], "desconocido")
+
+
+def solicitar_estado(led):
+    datos["led_deseado"] = led
+    return jsonify(
+        ok=True,
+        estado=estado_actual(),
+        led_deseado=led,
+    ), 202
 
 @app.route("/")
 def index():
@@ -24,15 +26,48 @@ def index():
 
 @app.route("/estado")
 def estado():
-    return pedir_al_esp32("/estado")
+    return jsonify(ok=True, estado=estado_actual())
 
 @app.route("/encender", methods=["POST"])
 def encender():
-    return pedir_al_esp32("/on")
+    return solicitar_estado("on")
 
 @app.route("/apagar", methods=["POST"])
 def apagar():
-    return pedir_al_esp32("/off")
+    return solicitar_estado("off")
+
+
+@app.route("/api/led", methods=["GET", "POST"])
+def led():
+    if request.method == "GET":
+        return jsonify(
+            led_deseado=datos["led_deseado"],
+            led_reportado=datos["led_reportado"],
+        )
+
+    cuerpo = request.get_json(silent=True)
+    nuevo = cuerpo.get("estado") if isinstance(cuerpo, dict) else None
+    if nuevo not in ("on", "off"):
+        return jsonify(error="estado debe ser 'on' u 'off'"), 400
+
+    return solicitar_estado(nuevo)
+
+
+@app.route("/api/esp32/config")
+def esp32_config():
+    return jsonify(led=datos["led_deseado"])
+
+
+@app.route("/api/esp32/estado", methods=["POST"])
+def esp32_estado():
+    cuerpo = request.get_json(silent=True)
+    reportado = cuerpo.get("led") if isinstance(cuerpo, dict) else None
+    if reportado not in ("on", "off"):
+        return jsonify(error="led debe ser 'on' u 'off'"), 400
+
+    datos["led_reportado"] = reportado
+    return jsonify(ok=True)
+
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001)
+    app.run(host="0.0.0.0", port=5000)

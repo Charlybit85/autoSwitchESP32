@@ -1,21 +1,46 @@
-from flask import Flask, jsonify
+import os
+import time
 
-app = Flask(__name__)
-rele={"estado": "apagado"} #con esto simulamos el estado del rele
+import requests
 
-@app.route("/on")
-def on():
-    rele["estado"] = "encendido"
-    return jsonify(estado=rele["estado"])
+SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:5000")
+TIMEOUT = 3
+INTERVALO = 2
+rele = {"estado": "apagado"}
 
-@app.route("/off")
-def off():
-    rele["estado"] = "apagado"
-    return jsonify(estado=rele["estado"])
 
-@app.route("/estado")
-def estado():
-    return jsonify(estado=rele["estado"])
+def simular_ciclo():
+    respuesta = requests.get(
+        f"{SERVER_URL}/api/esp32/config",
+        timeout=TIMEOUT,
+    )
+    respuesta.raise_for_status()
+    led_deseado = respuesta.json().get("led")
+    if led_deseado not in ("on", "off"):
+        raise ValueError("La API devolvió un estado de LED no válido.")
+
+    estado_nuevo = "encendido" if led_deseado == "on" else "apagado"
+    if rele["estado"] != estado_nuevo:
+        rele["estado"] = estado_nuevo
+        print(f"LED {estado_nuevo}")
+
+    respuesta = requests.post(
+        f"{SERVER_URL}/api/esp32/estado",
+        json={"led": led_deseado},
+        timeout=TIMEOUT,
+    )
+    respuesta.raise_for_status()
+
+
+def main():
+    print(f"Simulador conectado a {SERVER_URL}")
+    while True:
+        try:
+            simular_ciclo()
+        except requests.RequestException as error:
+            print(f"No se pudo comunicar con la aplicación: {error}")
+        time.sleep(INTERVALO)
+
 
 if __name__ == "__main__":
-    app.run(port=5001)
+    main()

@@ -66,3 +66,4 @@ async function cambiarEstado(ruta) {
 buttons[0].addEventListener("click", () => cambiarEstado("/encender"));
 buttons[1].addEventListener("click", () => cambiarEstado("/apagar"));
 actualizarEstado();
+setInterval(actualizarEstado, 2000);
