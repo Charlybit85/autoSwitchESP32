@@ -24,6 +24,10 @@ function mostrarError(mensaje) {
 
 async function solicitarEstado(ruta, metodo = "GET") {
   const respuesta = await fetch(ruta, { method: metodo });
+  if (respuesta.status === 401) {
+  window.location.href = "/login";
+  throw new Error("Sesión caducada.");
+}
   const datos = await respuesta.json();
 
   if (!respuesta.ok || datos.ok === false) {

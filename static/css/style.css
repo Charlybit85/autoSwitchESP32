@@ -135,3 +135,26 @@ button:disabled {
 .error[hidden] {
   display: none;
 }
+.usuario-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: var(--azul-claro);
+  border-bottom: 1px solid var(--borde);
+  font-size: 0.85rem;
+  color: var(--azul-oscuro);
+}
+.usuario-barra form { margin: 0; }
+.btn-salir {
+  flex: none;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--azul);
+  border-radius: 8px;
+  color: var(--azul);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-salir:hover { background: white; }
