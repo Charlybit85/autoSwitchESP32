@@ -1,0 +1,12 @@
+.git
+backend/.env
+backend/vendor
+backend/node_modules
+backend/storage
+backend/database/*.sqlite
+venv
+.venv
+*.db
+**/.env
+Esp32/config.h
+__pycache__

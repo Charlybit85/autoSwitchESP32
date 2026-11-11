@@ -3,7 +3,9 @@ import time
 
 import requests
 
-SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:5000")
+SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8080")
+DEVICE_TOKEN = os.environ["DEVICE_TOKEN"]
+HEADERS = {"Authorization": f"Bearer {DEVICE_TOKEN}"}
 TIMEOUT = 3
 INTERVALO = 2
 rele = {"estado": "apagado"}
@@ -13,6 +15,7 @@ def simular_ciclo():
     respuesta = requests.get(
         f"{SERVER_URL}/api/esp32/config",
         timeout=TIMEOUT,
+        headers=HEADERS,
     )
     respuesta.raise_for_status()
     led_deseado = respuesta.json().get("led")
@@ -28,6 +31,7 @@ def simular_ciclo():
         f"{SERVER_URL}/api/esp32/estado",
         json={"led": led_deseado},
         timeout=TIMEOUT,
+        headers=HEADERS,
     )
     respuesta.raise_for_status()
 
