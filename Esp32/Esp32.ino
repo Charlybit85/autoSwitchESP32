@@ -2,11 +2,10 @@
 #include <ESP8266HTTPClient.h>
 #include <ArduinoJson.h>
 
-const char* WIFI_SSID  = "Samsung123";
-const char* WIFI_PASS  = "12345678";
-// const char* SERVER_URL = "http://10.113.85.87:5000/api/esp32/estado";
-const char* SERVER_CONFIG = "http://10.113.85.87:5000/api/esp32/config";
-const char* SERVER_ESTADO = "http://10.113.85.87:5000/api/esp32/estado";
+// Copiar config.example.h como config.h y completar los valores locales.
+#include "config.h"
+String configUrl = String(SERVER_URL) + "/api/esp32/config";
+String estadoUrl = String(SERVER_URL) + "/api/esp32/estado";
 #define RELAY_PIN 12
 
 // const int PIN_LED = 2;  
@@ -52,7 +51,8 @@ void reportarEstado() {
   WiFiClient client;
   HTTPClient http;
 
-  http.begin(client, SERVER_ESTADO);
+  http.begin(client, estadoUrl);
+  http.addHeader("Authorization", String("Bearer ") + DEVICE_TOKEN);
 
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(3000);
@@ -143,7 +143,8 @@ void consultarServidor() {
   WiFiClient client;
   HTTPClient http;
 
-  http.begin(client, SERVER_CONFIG);
+  http.begin(client, configUrl);
+  http.addHeader("Authorization", String("Bearer ") + DEVICE_TOKEN);
   http.setTimeout(3000);
 
   int codigo = http.GET();

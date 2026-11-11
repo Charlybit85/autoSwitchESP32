@@ -3,3 +3,5 @@ venv/
 usuarios.db
 *.db
 __pycache__/
+Esp32/config.h
+.env
